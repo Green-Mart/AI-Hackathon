@@ -22,7 +22,7 @@ app.use('/issues', issueRoutes);
 app.use('/payments', paymentRoutes);
 
 
-const port = 3000;
+const port = 4000;
 app.listen(port, "0.0.0.0", () => {
 	console.log("server ready at port", port);
 });

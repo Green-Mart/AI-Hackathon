@@ -1,30 +1,98 @@
-import React, { useContext, useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
-import { AuthContext } from '../../context/AuthContext';
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  Button,
+  StyleSheet,
+  Alert,
+  TouchableOpacity,
+} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
+import { loginUser } from '../../utils/api'; // Adjust the path if needed
 
-export default function LoginScreen({ navigation }) {
-  const { setUser } = useContext(AuthContext);
+const Login = () => {
+  const navigation = useNavigation();
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [passwd, setPasswd] = useState('');
 
-  const handleLogin = () => {
-    // Call your backend API here
-    setUser({ email }); // simulate login
+  const handleLogin = async () => {
+    if (!email || !passwd) {
+      Alert.alert('Validation Error', 'Please enter both email and password');
+      return;
+    }
+
+    try {
+      const res = await loginUser(email, passwd);
+
+      if (res.status === 'success') {
+        const { token, id, name, role } = res.data;
+
+        await AsyncStorage.setItem('token', token);
+        await AsyncStorage.setItem('userId', id.toString());
+        await AsyncStorage.setItem('name', name);
+        await AsyncStorage.setItem('role', role);
+
+        Alert.alert('Login Success', `Welcome ${name}`);
+        navigation.navigate('Home');
+      } else {
+        Alert.alert('Login Failed', res.error || 'Invalid credentials');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Something went wrong. Please try again later.');
+      console.error('Login Error:', error);
+    }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Library Login</Text>
-      <TextInput placeholder="Email" value={email} onChangeText={setEmail} style={styles.input} />
-      <TextInput placeholder="Password" value={password} onChangeText={setPassword} secureTextEntry style={styles.input} />
+      <Text style={styles.heading}>Login</Text>
+      <TextInput
+        placeholder="Email"
+        style={styles.input}
+        onChangeText={setEmail}
+        value={email}
+        keyboardType="email-address"
+        autoCapitalize="none"
+      />
+      <TextInput
+        placeholder="Password"
+        style={styles.input}
+        secureTextEntry
+        onChangeText={setPasswd}
+        value={passwd}
+      />
       <Button title="Login" onPress={handleLogin} />
-      <Button title="Register" onPress={() => navigation.navigate('Register')} />
+      <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+        <Text style={styles.link}>Don't have an account? Register here</Text>
+      </TouchableOpacity>
     </View>
   );
-}
+};
+
+export default Login;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 20 },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
-  input: { borderWidth: 1, padding: 10, marginBottom: 10, borderRadius: 5 }
+  container: {
+    padding: 20,
+    marginTop: 100,
+  },
+  heading: {
+    fontSize: 24,
+    marginBottom: 30,
+    textAlign: 'center',
+    fontWeight: 'bold',
+  },
+  input: {
+    marginBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#999',
+    padding: 8,
+  },
+  link: {
+    marginTop: 12,
+    color: 'blue',
+    textAlign: 'center',
+  },
 });

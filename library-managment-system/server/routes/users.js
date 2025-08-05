@@ -105,7 +105,7 @@ router.put("/:id", (req, res) => {
 
 // DELETE /users/:id
 router.delete("/:id", (req, resp) => {
-    db.query("DELETE FROM users WHERE id=?", [req.params.id],
+    db.query("DELETE FROM user WHERE id=?", [req.params.id],
         (err, results) => {
             if(err)
                 return resp.send(apiError(err))
@@ -120,7 +120,7 @@ router.delete("/:id", (req, resp) => {
 router.patch("/changepasswd", (req,resp) => {
     const {id, passwd} = req.body
     const encPasswd = bcrypt.hashSync(passwd, 10)
-    db.query("UPDATE users SET passwd=? WHERE id=?", [encPasswd, id],
+    db.query("UPDATE user SET passwd=? WHERE id=?", [encPasswd, id],
         (err, result) => {
             if(err)
                 return resp.send(apiError(err))
